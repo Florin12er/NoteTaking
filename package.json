@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.6.0",
+    "@codemirror/language": "^6.10.2",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.28.6",
     "@tiptap/extension-bullet-list": "^2.5.5",
     "@tiptap/extension-character-count": "^2.5.5",
     "@tiptap/extension-code-block": "^2.5.5",
@@ -45,6 +49,7 @@
     "@tiptap/react": "^2.5.5",
     "@tiptap/starter-kit": "^2.5.5",
     "@types/react-router-dom": "^5.3.3",
+    "codemirror": "^6.0.1",
     "highlight.js": "^11.10.0",
     "lowlight": "^3.1.0",
     "react": "^18.3.1",

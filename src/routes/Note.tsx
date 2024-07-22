@@ -15,7 +15,7 @@ const NoteEditor = () => {
       // Here you can handle content updates, e.g., save to localStorage
     },
   });
- useEffect(() => {
+useEffect(() => {
     const loadTheme = async () => {
       const linkElement = document.getElementById('highlight-theme') || document.createElement('link');
       linkElement.id = 'highlight-theme';
