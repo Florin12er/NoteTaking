@@ -15,7 +15,7 @@ const NoteEditor: React.FC = () => {
   const editor = useEditor({
     ...EditorConfig,
     onUpdate: () => {
-      // Here you can handle content updates, e.g., save to localStorage
+            !isMobile
     },
   });
 

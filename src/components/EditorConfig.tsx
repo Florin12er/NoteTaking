@@ -42,23 +42,21 @@ lowlight.register('kotlin', kotlin);
 lowlight.register('typescript', typescript);
 lowlight.register('dart', dart);
 import { Extension } from '@tiptap/core';
+import { InputRule } from '@tiptap/core';
 
 const TableInputRule = Extension.create({
   name: 'tableInputRule',
 
   addInputRules() {
     return [
-      {
+      new InputRule({
         find: /^\|(.+)\|(.+)\|$/,
-        handler: ({ state, range, match }) => {
+        handler: ({ state, range, match, commands }) => {
           const [fullMatch, col1, col2] = match;
 
           if (fullMatch) {
-            const { tr } = state;
             const start = range.from;
             const end = range.to;
-
-            tr.delete(start, end);
 
             const createCell = (content: string) => {
               const trimmedContent = content.trim();
@@ -80,12 +78,11 @@ const TableInputRule = Extension.create({
               ])
             ]);
 
-            tr.insert(start, table);
-            return tr;
+            commands.deleteRange({ from: start, to: end });
+            commands.insertContent(table.toJSON());
           }
-          return null;
         }
-      }
+      })
     ];
   }
 });
