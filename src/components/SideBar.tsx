@@ -4,14 +4,23 @@ import { ElementRef, useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from 'axios';
 
-const SideBar = () => {
+interface Note {
+    id: number;
+    title: string;
+    dashboard_path?: string;
+    content?: string;
+}
+
+const SideBar: React.FC = () => {
     const isMobile = useMediaQuery("(max-width: 768px)");
     const isResizing = useRef(false);
     const sideBarRef = useRef<ElementRef<"aside">>(null);
     const navbarRef = useRef<ElementRef<"div">>(null);
     const [isResetting, setIsResetting] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(isMobile);
+    const [notes, setNotes] = useState<Note[]>([]);
 
     useEffect(() => {
         if (isMobile) {
@@ -19,7 +28,17 @@ const SideBar = () => {
         } else {
             resetWidth();
         }
+        fetchNotes();
     }, [isMobile]);
+
+    const fetchNotes = async () => {
+        try {
+            const response = await axios.get<Note[]>('http://localhost:3000/notes', { withCredentials: true });
+            setNotes(response.data);
+        } catch (error) {
+            console.error('Error fetching notes:', error);
+        }
+    };
 
     const handleMouseDown = (
         event: React.MouseEvent<HTMLDivElement, MouseEvent>
@@ -125,6 +144,19 @@ const SideBar = () => {
                             Documents
                         </Link>
                     </motion.div>
+                    <div className="mt-2 pl-6">
+                        {notes.map((note) => (
+                            <motion.div
+                                key={note.id}
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                            >
+                                <Link to={`/notes/${note.id}`} className="block text-sm text-muted-foreground hover:text-primary py-1">
+                                    {note.title}
+                                </Link>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
                 <div
                     onMouseDown={handleMouseDown}

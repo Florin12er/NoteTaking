@@ -8,11 +8,16 @@ import Login from './routes/Login';
 import Register from './routes/Register';
 import ResetRequest from './routes/ResetRequest';
 import Reset from './routes/ResetPassword';
+import HomePage from './routes/NotePage';
+import NoteEditor from './routes/Note';
 const App: React.FC = () => {
     return (
         <Routes>
             <Route path="/" element={<Home/>}/>
-                <Route path="/note" element={<DashBoard />} />
+                <Route path="/note" element={<DashBoard />} >
+                    <Route index element={<HomePage/>}/>
+                    <Route path="new" element={<NoteEditor/>}/>
+                </Route>
                 <Route path="/login" element={<Login/>} />
                 <Route path="/register" element={<Register/>}/>
                 <Route path="/reset-request" element={<ResetRequest/>}/>

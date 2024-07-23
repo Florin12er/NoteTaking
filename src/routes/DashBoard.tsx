@@ -1,5 +1,5 @@
 import React from 'react';
-import NoteEditor from './Note';
+import { Outlet } from 'react-router-dom';
 import SideBar from '../components/SideBar';
 import { motion } from 'framer-motion';
 
@@ -14,8 +14,8 @@ const DashBoard: React.FC = () => {
                 className="flex-1 h-full overflow-y-auto p-6"
             >
                 <div className="max-w-6xl mx-auto">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-6">My Notes</h1>
-                    <NoteEditor />
+                    {/* Render the nested routes */}
+                    <Outlet />
                 </div>
             </motion.main>
         </div>
