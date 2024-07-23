@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
 
-const ColorPicker = ({ onChange, initialColor }) => {
-  const [color, setColor] = useState(initialColor);
-  const [showPicker, setShowPicker] = useState(false);
+interface ColorPickerProps {
+  onChange: (color: string) => void;
+  initialColor: string;
+}
 
-  const handleColorChange = (newColor) => {
+const ColorPicker: React.FC<ColorPickerProps> = ({ onChange, initialColor }) => {
+  const [color, setColor] = useState<string>(initialColor);
+  const [showPicker, setShowPicker] = useState<boolean>(false);
+
+  const handleColorChange = (newColor: string) => {
     setColor(newColor);
     onChange(newColor);
   };

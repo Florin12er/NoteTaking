@@ -1,8 +1,8 @@
-import 'highlight.js/styles/nord.css'; // or any other style you prefer
-import 'highlight.js/styles/github.css'; // or any other style you prefer
-import "highlight.js/styles/atom-one-dark-reasonable.css"
-
 import StarterKit from '@tiptap/starter-kit';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
 import CharacterCount from '@tiptap/extension-character-count';
 import Color from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
@@ -15,7 +15,6 @@ import Link from '@tiptap/extension-link';
 import Typography from '@tiptap/extension-typography';
 import Placeholder from '@tiptap/extension-placeholder';
 import { common, createLowlight } from 'lowlight';
-import { InputRule } from '@tiptap/core';
 
 // Import additional languages
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -42,27 +41,69 @@ lowlight.register('julia', julia);
 lowlight.register('kotlin', kotlin);
 lowlight.register('typescript', typescript);
 lowlight.register('dart', dart);
+import { Extension } from '@tiptap/core';
 
-const customLinkInputRule = new InputRule({
-  find: /\[(.+)\]\((.+)\)/,
-  handler: ({ state, range, match }) => {
-    const [, linkText, href] = match;
-    const { tr } = state;
-    const start = range.from;
-    const end = range.to;
+const TableInputRule = Extension.create({
+  name: 'tableInputRule',
 
-    tr.replaceWith(start, end, state.schema.text(linkText))
-      .addMark(start, start + linkText.length, state.schema.marks.link.create({ href }));
-  },
+  addInputRules() {
+    return [
+      {
+        find: /^\|(.+)\|(.+)\|$/,
+        handler: ({ state, range, match }) => {
+          const [fullMatch, col1, col2] = match;
+
+          if (fullMatch) {
+            const { tr } = state;
+            const start = range.from;
+            const end = range.to;
+
+            tr.delete(start, end);
+
+            const createCell = (content: string) => {
+              const trimmedContent = content.trim();
+              return state.schema.nodes.tableCell.create(
+                null,
+                trimmedContent
+                  ? state.schema.nodes.paragraph.create(
+                      null,
+                      state.schema.text(trimmedContent)
+                    )
+                  : state.schema.nodes.paragraph.create()
+              );
+            };
+
+            const table = state.schema.nodes.table.create(null, [
+              state.schema.nodes.tableRow.create(null, [
+                createCell(col1),
+                createCell(col2)
+              ])
+            ]);
+
+            tr.insert(start, table);
+            return tr;
+          }
+          return null;
+        }
+      }
+    ];
+  }
 });
 
-export const editorConfig = {
+const EditorConfig = {
   extensions: [
     StarterKit.configure({
       codeBlock: false,
     }),
     CharacterCount,
     Color,
+    Table.configure({
+      resizable: true,
+    }),
+    TableRow,
+    TableCell,
+    TableHeader,
+    TableInputRule,
     TextStyle,
     Highlight.configure({ multicolor: true }),
     TaskList,
@@ -81,7 +122,7 @@ export const editorConfig = {
       HTMLAttributes: {
         class: 'text-blue-600 hover:underline',
       },
-    }).extend([customLinkInputRule]),
+    }),
     Typography,
     Placeholder.configure({
       placeholder: 'Write something …',
@@ -96,4 +137,6 @@ export const editorConfig = {
   enableInputRules: true,
   enablePasteRules: true,
 };
+
+export default EditorConfig;
 

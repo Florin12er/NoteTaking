@@ -1,110 +1,147 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
 import BlockMenu from '../components/BlockMenu';
 import BubbleMenuContent from '../components/BubbleMenuContent';
 import CodeThemeSelector from '../components/CodeSelector';
-import { editorConfig } from '../components/EditorConfig';
+import  EditorConfig  from '../components/EditorConfig';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Undo, Redo, Copy, Save } from 'lucide-react';
 
-const NoteEditor = () => {
-  const [showBlockMenu, setShowBlockMenu] = useState(false);
-  const [theme, setTheme] = useState('nord');
+const NoteEditor: React.FC = () => {
+      const [showBlockMenu, setShowBlockMenu] = useState<boolean>(false);
+  const [theme, setTheme] = useState<string>('github-light');
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   const editor = useEditor({
-    ...editorConfig,
+    ...EditorConfig,
     onUpdate: () => {
       // Here you can handle content updates, e.g., save to localStorage
     },
   });
-useEffect(() => {
-    const loadTheme = async () => {
-      const linkElement = document.getElementById('highlight-theme') || document.createElement('link');
+
+  const loadTheme = useCallback(async () => {
+    let linkElement = document.getElementById('highlight-theme') as HTMLLinkElement | null;
+    if (!linkElement) {
+      linkElement = document.createElement('link') as HTMLLinkElement;
       linkElement.id = 'highlight-theme';
       linkElement.rel = 'stylesheet';
-      linkElement.href = `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/${theme}.min.css`;
       document.head.appendChild(linkElement);
-    };
-
-    loadTheme();
+    }
+    linkElement.href = `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/${theme}.min.css`
   }, [theme]);
 
-  const testCodeHighlighting = () => {
-    if (editor) {
-      editor.chain()
-        .focus()
-        .insertContent(`
-<pre><code class="language-javascript">
-function helloWorld() {
-  console.log("Hello, world!");
-}
-</code></pre>
-<pre><code class="language-python">
-def hello_world():
-    print("Hello, world!")
-</code></pre>
-<pre><code class="language-java">
-public class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello, world!");
-    }
-}
-</code></pre>
-        `)
-        .run();
-    }
-  };
+  useEffect(() => {
+    loadTheme();
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [loadTheme]);
 
-  const testLink = () => {
-    if (editor) {
-      editor.chain()
-        .focus()
-        .insertContent('This is a [custom link](https://example.com) using the new syntax.')
-        .run();
-    }
-  };
 
-  return (
-    <div className="relative max-w-4xl mx-auto p-4 bg-white shadow-lg rounded-lg">
-      <CodeThemeSelector onChange={setTheme} />
-      <div className="relative">
-        <button 
-          onClick={() => setShowBlockMenu(!showBlockMenu)} 
-          className="absolute left-0 top-0 z-10 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-        </button>
-        <BlockMenu editor={editor} show={showBlockMenu} setShow={setShowBlockMenu} />
-        <EditorContent editor={editor} className="min-h-[300px] border border-gray-300 rounded p-4 pl-12" />
-      </div>
-      {editor && (
-        <BubbleMenu 
-          editor={editor} 
-          tippyOptions={{ duration: 100 }} 
-          className="bg-white shadow-lg rounded-lg p-2 flex gap-2"
-        >
-          <BubbleMenuContent editor={editor} />
-        </BubbleMenu>
-      )}
-      <div className="mt-4 text-sm text-gray-500">
-        {editor && `Characters: ${editor.storage.characterCount.characters()}`}
-      </div>
-      <div className="mt-4 flex gap-2">
-        <button 
-          onClick={testCodeHighlighting}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          Test Code Highlighting
-        </button>
-        <button 
-          onClick={testLink}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-        >
-          Test Custom Link
-        </button>
-      </div>
-    </div>
-  );
+    return (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="p-4 bg-gray-50 border-b border-gray-200">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <CodeThemeSelector onChange={setTheme} />
+                    <div className="flex items-center gap-2">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => editor?.chain().focus().undo().run()}
+                            disabled={!editor?.can().undo()}
+                            className="p-2 bg-white rounded-md shadow-sm hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                            title="Undo"
+                        >
+                            <Undo size={20} />
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => editor?.chain().focus().redo().run()}
+                            disabled={!editor?.can().redo()}
+                            className="p-2 bg-white rounded-md shadow-sm hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                            title="Redo"
+                        >
+                            <Redo size={20} />
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setShowBlockMenu(!showBlockMenu)}
+                            className="p-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600 transition-colors"
+                            title="Add block"
+                        >
+                            <Plus size={20} />
+                        </motion.button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="relative">
+                <AnimatePresence>
+                    {showBlockMenu && editor && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="absolute z-20 right-52 top-0"
+                        >
+                            <BlockMenu editor={editor} show={showBlockMenu} setShow={setShowBlockMenu} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <EditorContent 
+                    editor={editor} 
+                    className="prose max-w-none p-6 sm:p-8 min-h-[50vh] focus:outline-none"
+                />
+            </div>
+
+            {editor && (
+                <BubbleMenu 
+                    editor={editor} 
+                    tippyOptions={{ duration: 100 }} 
+                    className="bg-white shadow-lg rounded-lg p-2 flex flex-wrap gap-2 border border-gray-200"
+                >
+                    <BubbleMenuContent editor={editor} />
+                </BubbleMenu>
+            )}
+
+            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+                <span className="text-sm text-gray-500">
+                    {editor && editor.storage.characterCount && `Characters: ${editor.storage.characterCount.characters()}`}
+                </span>
+                <div className="flex gap-2">
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                            if (editor) {
+                                navigator.clipboard.writeText(editor.getHTML());
+                                alert('Content copied to clipboard!');
+                            }
+                        }}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors flex items-center gap-2"
+                    >
+                        <Copy size={16} /> Copy
+                    </motion.button>
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                            // Implement save functionality
+                            console.log('Saving...');
+                        }}
+                        className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2"
+                    >
+                        <Save size={16} /> Save
+                    </motion.button>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default NoteEditor;
