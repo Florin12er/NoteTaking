@@ -111,26 +111,6 @@ const NoteEditor: React.FC = () => {
                     </div>
                 </div>
             </div>
-                <div className="absolute right-[50px]">
-  <AnimatePresence>
-                    {showBlockMenu && editor && (
-                        <motion.div 
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                            className="absolute z-20 right-52 top-0"
-                        >
-                            <BlockMenu 
-                                editor={editor} 
-                                show={showBlockMenu} 
-                                setShow={setShowBlockMenu} 
-                                onDashboardImageUpload={handleDashboardImageUpload} 
-                            />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-                </div>
 
             <div className="p-4 bg-gray-50 border-b border-gray-200">
                 <input
@@ -149,7 +129,25 @@ const NoteEditor: React.FC = () => {
             )}
 
             <div className="relative">
-              
+                <AnimatePresence>
+                    {showBlockMenu && editor && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="absolute z-20 right-52 top-0"
+                        >
+                            <BlockMenu 
+                                editor={editor} 
+                                show={showBlockMenu} 
+                                setShow={setShowBlockMenu} 
+                                onDashboardImageUpload={handleDashboardImageUpload} 
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <EditorContent 
                     editor={editor} 
                     className="prose max-w-none p-6 sm:p-8 min-h-[50vh] focus:outline-none"

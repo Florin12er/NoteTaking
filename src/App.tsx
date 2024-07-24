@@ -15,7 +15,7 @@ const App: React.FC = () => {
     return (
         <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/note" element={<DashBoard />}>
+                <Route path="/note" element={<DashBoard/>}>
                 <Route index element={<HomePage />} />
                 <Route path="new" element={<NoteEditor />} />
                 <Route path=":noteId" element={<UpdateNote />} />

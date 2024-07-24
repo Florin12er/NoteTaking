@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronsLeft, Menu, FileText, FilePlus } from 'lucide-react';
+import { ChevronsLeft, Menu, FileText } from 'lucide-react';
 import { ElementRef } from 'react';
 import { useMediaQuery } from 'usehooks-ts';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { Actions } from '../functions/sideBarFunction';
 
 interface Note {
     ID: number;
@@ -22,7 +23,7 @@ const SideBar: React.FC = () => {
     const [notes, setNotes] = useState<Note[]>([]);
     const ws = useRef<WebSocket | null>(null);
 
-    useEffect(() => {
+ useEffect(() => {
         if (isMobile) {
             collapse();
         } else {
@@ -45,23 +46,44 @@ const SideBar: React.FC = () => {
             console.error('Error fetching notes:', error);
         }
     };
+const connectWebSocket = () => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+        return; // WebSocket is already open
+    }
 
-    const connectWebSocket = () => {
-        ws.current = new WebSocket('ws://localhost:3000/ws');
-        ws.current.onopen = () => {
-            console.log('WebSocket connected');
-        };
-        ws.current.onmessage = (event) => {
+    ws.current = new WebSocket('ws://localhost:3000/ws');
+
+    ws.current.onopen = () => {
+        console.log('WebSocket connected');
+    };
+
+    ws.current.onmessage = (event) => {
+        try {
             const data = JSON.parse(event.data);
             if (data.type === 'noteList') {
                 setNotes(data.data);
+            } else if (data.type === 'noteUpdate') {
+                const updatedNote = data.data;
+                setNotes(prevNotes => prevNotes.map(note => note.ID === updatedNote.ID ? updatedNote : note));
+            } else if (data.type === 'noteDelete') {
+                const deletedNoteID = data.data;
+                setNotes(prevNotes => prevNotes.filter(note => note.ID !== deletedNoteID));
             }
-        };
-        ws.current.onclose = () => {
-            console.log('WebSocket disconnected');
-        };
+        } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
+        }
     };
 
+    ws.current.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.reason);
+        setTimeout(connectWebSocket, 3000); // Attempt to reconnect after 3 seconds
+    };
+
+    ws.current.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    };
+};
+ //
     const handleMouseDown = (
         event: React.MouseEvent<HTMLDivElement, MouseEvent>
     ) => {
@@ -72,7 +94,7 @@ const SideBar: React.FC = () => {
         document.addEventListener("mousemove", handleMouseMove);
         document.addEventListener("mouseup", handleMouseUp);
     };
-
+// handle Mouse Move 
     const handleMouseMove = (event: MouseEvent) => {
         if (!isResizing.current) return;
         let newWidth = event.clientX;
@@ -86,13 +108,13 @@ const SideBar: React.FC = () => {
             navbarRef.current.style.setProperty("width", `calc(100% - ${newWidth}px)`);
         }
     };
-
+// handle mouse up
     const handleMouseUp = () => {
         isResizing.current = false;
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("mouseup", handleMouseUp);
     };
-
+//reset width function
     const resetWidth = () => {
         if (sideBarRef.current && navbarRef.current) {
             setIsCollapsed(false);
@@ -110,7 +132,7 @@ const SideBar: React.FC = () => {
             setTimeout(() => setIsResetting(false), 300);
         }
     };
-
+//collapse function
     const collapse = () => {
         if (sideBarRef.current && navbarRef.current) {
             setIsCollapsed(true);
@@ -123,7 +145,7 @@ const SideBar: React.FC = () => {
         }
     };
 
-    return (
+ return (
         <>
             <motion.aside
                 ref={sideBarRef}
@@ -145,31 +167,7 @@ const SideBar: React.FC = () => {
                 >
                     <ChevronsLeft className="h-6 w-6" />
                 </div>
-                <div className="mt-10">
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                        <Link to="#" className="flex gap-2 text-muted-foreground hover:text-primary px-4 py-2">
-                            <FilePlus />
-                            Action Items
-                        </Link>
-                    </motion.div>
-                 <div className="mt-2 pl-6">
-                        <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                            <Link to="/note/new">New Note</Link>
-                        </motion.div>
-                        <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                            <Link to="/note">Home</Link>
-                        </motion.div>
-                    </div>
-                </div>
+                <Actions/>
                 <div className="mt-4">
                     <motion.div
                         whileHover={{ scale: 1.05 }}
@@ -230,7 +228,6 @@ const SideBar: React.FC = () => {
             </motion.div>
         </>
     );
-}
+};
 
 export default SideBar;
-
