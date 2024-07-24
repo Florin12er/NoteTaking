@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
 import BlockMenu from '../components/BlockMenu';
 import BubbleMenuContent from '../components/BubbleMenuContent';
@@ -7,15 +8,14 @@ import EditorConfig from '../components/EditorConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Undo, Redo, Copy, Save } from 'lucide-react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
-const NoteEditor: React.FC = () => {
-    const [showBlockMenu, setShowBlockMenu] = useState(false);
-    const [theme, setTheme] = useState('github-light');
-    const [isMobile, setIsMobile] = useState(false);
-    const [title, setTitle] = useState('');
-    const [dashboardImage, setDashboardImage] = useState('');
-    const navigate = useNavigate();
+const UpdateNote: React.FC = () => {
+    const { noteId } = useParams<{ noteId: string }>();
+    const [showBlockMenu, setShowBlockMenu] = useState<boolean>(false);
+    const [theme, setTheme] = useState<string>('github-light');
+    const [isMobile, setIsMobile] = useState<boolean>(false);
+    const [title, setTitle] = useState<string>('');
+    const [dashboardImage, setDashboardImage] = useState<string>('');
 
     const editor = useEditor({
         ...EditorConfig,
@@ -43,12 +43,27 @@ const NoteEditor: React.FC = () => {
         return () => window.removeEventListener('resize', checkMobile);
     }, [loadTheme]);
 
+    useEffect(() => {
+        const fetchNote = async () => {
+            try {
+                const response = await axios.get(`http://localhost:3000/notes/${noteId}`, { withCredentials: true });
+                const { title, content, dashboard_path } = response.data;
+                setTitle(title);
+                setDashboardImage(dashboard_path);
+                editor?.commands.setContent(content);
+            } catch (error) {
+                console.error('Error fetching note:', error);
+                alert('Failed to load note.');
+            }
+        };
+
+        if (noteId) {
+            fetchNote();
+        }
+    }, [noteId, editor]);
+
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
-    };
-
-    const handleDashboardImageUpload = (url: string) => {
-        setDashboardImage(url);
     };
 
     const handleSave = async () => {
@@ -56,20 +71,17 @@ const NoteEditor: React.FC = () => {
 
         const content = editor.getHTML();
         try {
-            const response = await axios.post('http://localhost:3000/notes', {
+            const response = await axios.put(`http://localhost:3000/notes/${noteId}`, {
                 title,
                 dashboard_path: dashboardImage,
                 content,
             }, { withCredentials: true });
 
-            console.log('Note saved:', response.data);
-            alert('Note saved successfully!');
-
-            // Navigate to the newly created note's page
-            navigate(`/note/${response.data.ID}`);
+            console.log('Note updated:', response.data);
+            alert('Note updated successfully!');
         } catch (error) {
-            console.error('Error saving note:', error);
-            alert('Failed to save note.');
+            console.error('Error updating note:', error);
+            alert('Failed to update note.');
         }
     };
 
@@ -121,17 +133,11 @@ const NoteEditor: React.FC = () => {
                             transition={{ duration: 0.3 }}
                             className="absolute z-20 right-52 top-0"
                         >
-                            <BlockMenu 
-                                editor={editor} 
-                                show={showBlockMenu} 
-                                setShow={setShowBlockMenu} 
-                                onDashboardImageUpload={handleDashboardImageUpload} 
-                            />
+                            <BlockMenu editor={editor} show={showBlockMenu} setShow={setShowBlockMenu} />
                         </motion.div>
                     )}
                 </AnimatePresence>
                 </div>
-
             <div className="p-4 bg-gray-50 border-b border-gray-200">
                 <input
                     type="text"
@@ -149,8 +155,7 @@ const NoteEditor: React.FC = () => {
             )}
 
             <div className="relative">
-              
-                <EditorContent 
+                              <EditorContent 
                     editor={editor} 
                     className="prose max-w-none p-6 sm:p-8 min-h-[50vh] focus:outline-none"
                 />
@@ -198,5 +203,5 @@ const NoteEditor: React.FC = () => {
     );
 };
 
-export default NoteEditor;
+export default UpdateNote;
 

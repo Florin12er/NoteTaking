@@ -1,16 +1,15 @@
-import { Link } from "react-router-dom";
-import { ChevronsLeft, Menu, FileText, FilePlus } from "lucide-react";
-import { ElementRef, useEffect, useRef, useState } from "react";
-import { useMediaQuery } from "usehooks-ts";
-import { cn } from "../lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronsLeft, Menu, FileText, FilePlus } from 'lucide-react';
+import { ElementRef } from 'react';
+import { useMediaQuery } from 'usehooks-ts';
+import { cn } from '../lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
 interface Note {
-    id: number;
+    ID: number;
     title: string;
-    dashboard_path?: string;
-    content?: string;
 }
 
 const SideBar: React.FC = () => {
@@ -21,6 +20,7 @@ const SideBar: React.FC = () => {
     const [isResetting, setIsResetting] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(isMobile);
     const [notes, setNotes] = useState<Note[]>([]);
+    const ws = useRef<WebSocket | null>(null);
 
     useEffect(() => {
         if (isMobile) {
@@ -29,6 +29,12 @@ const SideBar: React.FC = () => {
             resetWidth();
         }
         fetchNotes();
+        connectWebSocket();
+        return () => {
+            if (ws.current) {
+                ws.current.close();
+            }
+        };
     }, [isMobile]);
 
     const fetchNotes = async () => {
@@ -38,6 +44,22 @@ const SideBar: React.FC = () => {
         } catch (error) {
             console.error('Error fetching notes:', error);
         }
+    };
+
+    const connectWebSocket = () => {
+        ws.current = new WebSocket('ws://localhost:3000/ws');
+        ws.current.onopen = () => {
+            console.log('WebSocket connected');
+        };
+        ws.current.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'noteList') {
+                setNotes(data.data);
+            }
+        };
+        ws.current.onclose = () => {
+            console.log('WebSocket disconnected');
+        };
     };
 
     const handleMouseDown = (
@@ -133,6 +155,20 @@ const SideBar: React.FC = () => {
                             Action Items
                         </Link>
                     </motion.div>
+                 <div className="mt-2 pl-6">
+                        <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    >
+                            <Link to="/note/new">New Note</Link>
+                        </motion.div>
+                        <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    >
+                            <Link to="/note">Home</Link>
+                        </motion.div>
+                    </div>
                 </div>
                 <div className="mt-4">
                     <motion.div
@@ -147,11 +183,11 @@ const SideBar: React.FC = () => {
                     <div className="mt-2 pl-6">
                         {notes.map((note) => (
                             <motion.div
-                                key={note.id}
+                                key={note.ID}
                                 whileHover={{ scale: 1.05 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
                             >
-                                <Link to={`/notes/${note.id}`} className="block text-sm text-muted-foreground hover:text-primary py-1">
+                                <Link to={`/note/${note.ID}`} className="block text-sm text-muted-foreground hover:text-primary py-1">
                                     {note.title}
                                 </Link>
                             </motion.div>
