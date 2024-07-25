@@ -25,9 +25,6 @@ const HomePage: React.FC = () => {
             setNotes(response.data);
         } catch (error) {
             console.error('Error fetching notes:', error);
-            if (axios.isAxiosError(error) && error.response?.status === 401) {
-                navigate('/login');
-            }
         }
     };
 
@@ -53,8 +50,8 @@ const HomePage: React.FC = () => {
     };
 
     const handleLogout = () => {
-        // Clear the cookie by setting it to expire immediately
         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         navigate('/login');
     };
 
