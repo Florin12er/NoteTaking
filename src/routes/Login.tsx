@@ -39,6 +39,13 @@ const Login: React.FC = () => {
             setIsLoading(false);
         }
     };
+    function ConnectToGithub() {
+        window.location.href = "http://localhost:8080/auth/github"
+    }
+      function ConnectToGoogle() {
+        window.location.href = "http://localhost:8080/auth/google"
+    }
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -130,6 +137,7 @@ const Login: React.FC = () => {
                     <div className="mt-6 grid grid-cols-2 gap-3">
                         <motion.button
                             whileHover={{ scale: 1.02 }}
+                            onClick={ConnectToGoogle}
                             whileTap={{ scale: 0.98 }}
                             className="w-full bg-zinc-100 text-black py-2 px-4 rounded-md hover:bg-zinc-300 transition duration-300 flex items-center justify-center"
                         >
@@ -140,6 +148,7 @@ const Login: React.FC = () => {
                         </motion.button>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
+                            onClick={ConnectToGithub}
                             whileTap={{ scale: 0.98 }}
                             className="w-full bg-gray-800 text-white py-2 px-4 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-center"
                         >

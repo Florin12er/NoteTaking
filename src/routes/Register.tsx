@@ -4,6 +4,12 @@ import { Book, Mail, Lock, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+declare global {
+  interface Window {
+    turnstile: any;
+  }
+}
+
 const Register: React.FC = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
@@ -11,13 +17,29 @@ const Register: React.FC = () => {
     const [turnstileResponse, setTurnstileResponse] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isTurnstileLoaded, setIsTurnstileLoaded] = useState(false);
     const navigate = useNavigate();
     const turnstileRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        // @ts-expect-error
-        if (window.turnstile && turnstileRef.current) {
-            // @ts-ignore
+        const script = document.createElement('script');
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback";
+        script.async = true;
+        script.defer = true;
+        document.body.appendChild(script);
+
+        window.onloadTurnstileCallback = () => {
+            setIsTurnstileLoaded(true);
+        };
+
+        return () => {
+            document.body.removeChild(script);
+            delete window.onloadTurnstileCallback;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (isTurnstileLoaded && turnstileRef.current) {
             window.turnstile.render(turnstileRef.current, {
                 sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
                 callback: function(token: string) {
@@ -25,7 +47,7 @@ const Register: React.FC = () => {
                 },
             });
         }
-    }, []);
+    }, [isTurnstileLoaded]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -51,6 +73,9 @@ const Register: React.FC = () => {
             }
         } finally {
             setIsLoading(false);
+            if (window.turnstile) {
+                window.turnstile.reset();
+            }
         }
     };
 

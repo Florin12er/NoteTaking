@@ -21,11 +21,24 @@ export const login = async (username: string, password: string) => {
 };
 
 export const logout = () => {
-  localStorage.removeItem('user');
+  // Clear localStorage
+localStorage.removeItem('user');
+    localStorage.removeItem("token")
+    localStorage.removeItem("userId")
+
+  // Clear any in-memory token
   setAuthToken('');
-  // Clear the authentication cookie
+
+  // Clear specific cookies
   document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-};
+  document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+  // If you're using a specific domain, you might need to add it:
+  // document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=yourdomain.com;';
+  // document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=yourdomain.com;';
+  // document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=yourdomain.com;';
+}
 
 export const getCurrentUser = () => {
   // First, check if the user data is in localStorage

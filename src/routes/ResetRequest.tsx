@@ -2,14 +2,42 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Book, Mail, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const ResetRequest: React.FC = () => {
     const [email, setEmail] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Reset password request for:', email);
-        // Implement the logic to send a reset code to the email
+        setIsLoading(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const response = await axios.post(
+                "http://localhost:8080/reset-request", 
+                { email }, 
+                { withCredentials: true }
+            );
+
+            if (response.status === 200) {
+                setSuccess(`Password reset email sent successfully to ${email}`);
+            } else {
+                setError('Unexpected response from server');
+            }
+            window.location.href = "/reset-password"
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                setError(error.response?.data?.message || 'An error occurred while sending the reset email');
+            } else {
+                setError('An unexpected error occurred');
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -46,14 +74,27 @@ const ResetRequest: React.FC = () => {
                         </div>
                     </div>
 
+                    {error && (
+                        <div className="text-red-500 text-sm mt-2">
+                            {error}
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="text-green-500 text-sm mt-2">
+                            {success}
+                        </div>
+                    )}
+
                     <div>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             type="submit"
                             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 flex items-center justify-center"
+                            disabled={isLoading}
                         >
-                            Send Reset Code
+                            {isLoading ? 'Sending...' : 'Send Reset Code'}
                         </motion.button>
                     </div>
                 </form>
