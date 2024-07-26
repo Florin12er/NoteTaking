@@ -1,4 +1,6 @@
 import React from 'react';
+import { ChevronDown } from 'lucide-react';
+
 
 const themes = [
   "a11y-dark",
@@ -252,25 +254,25 @@ type Theme = typeof themes[number];
 
 interface CodeThemeSelectorProps {
   onChange: (theme: Theme) => void;
+    currentTheme: string 
 }
-
-const CodeThemeSelector: React.FC<CodeThemeSelectorProps> = ({ onChange }) => {
+const CodeThemeSelector: React.FC<CodeThemeSelectorProps> = ({ onChange, currentTheme }) => {
   return (
-    <div className="mb-4">
-      <label htmlFor="code-theme-selector" className="block mb-2 text-sm font-medium text-gray-700">
-        Select Code Theme:
-      </label>
+    <div className="relative text-sm inline-block w-48">
       <select
-        id="code-theme-selector"
-        onChange={(e) => onChange(e.target.value as Theme)}
-        className="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        onChange={(e) => onChange(e.target.value)}
+        value={currentTheme}
+        className="appearance-none w-full bg-white border border-gray-300 hover:border-gray-400 py-1 rounded-s pl-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
       >
         {themes.map((theme) => (
           <option key={theme} value={theme}>
-            {theme}
+            {theme.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
           </option>
         ))}
       </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+        <ChevronDown className="h-4 w-4" />
+      </div>
     </div>
   );
 };

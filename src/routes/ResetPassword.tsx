@@ -13,6 +13,7 @@ const Reset: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
+      const ApiUrl = import.meta.env.VITE_USER_AUTH_API;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +29,7 @@ const Reset: React.FC = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/reset-password",
+        `${ApiUrl}/reset-password`,
         {
           email: email,
           reset_code: resetCode,

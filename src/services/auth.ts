@@ -1,7 +1,7 @@
 // src/services/auth.ts
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_USER_AUTH_API;
 
 export const setAuthToken = (token: string) => {
   if (token) {

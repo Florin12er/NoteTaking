@@ -1,5 +1,6 @@
 import StarterKit from '@tiptap/starter-kit';
 import Table from '@tiptap/extension-table';
+import FontFamily from "@tiptap/extension-font-family"
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
@@ -98,6 +99,7 @@ const EditorConfig = {
       resizable: true,
     }),
     TableRow,
+           FontFamily,
     TableCell,
     TableHeader,
     TableInputRule,

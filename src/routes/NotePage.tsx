@@ -1,4 +1,3 @@
-// src/components/HomePage.tsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,6 +13,8 @@ interface Note {
 const HomePage: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const navigate = useNavigate();
+  const ApiUrl = import.meta.env.VITE_NOTE_API;
+  const UserApi = import.meta.env.VITE_USER_AUTH_API;
 
   useEffect(() => {
     fetchNotes();
@@ -21,7 +22,7 @@ const HomePage: React.FC = () => {
 
   const fetchNotes = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/notes", {
+      const response = await axios.get(`${ApiUrl}/notes`, {
         withCredentials: true,
       });
       setNotes(response.data);
@@ -34,15 +35,18 @@ const HomePage: React.FC = () => {
   };
 
   const truncateContent = (content: string, length: number) => {
-    if (content.length > length) {
-      return content.substring(0, length) + "...";
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, "text/html");
+    const plainText = doc.body.textContent || "";
+    if (plainText.length > length) {
+      return plainText.substring(0, length) + "...";
     }
-    return content;
+    return plainText;
   };
 
   const handleDeleteNote = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:3000/notes/${id}`, {
+      await axios.delete(`${ApiUrl}/notes/${id}`, {
         withCredentials: true,
       });
       setNotes(notes.filter((note) => note.ID !== id));
@@ -60,7 +64,7 @@ const HomePage: React.FC = () => {
     try {
       // Wait for the logout request to complete
       const response = await axios.post(
-        "http://localhost:8080/logout",
+        `${UserApi}/logout`,
         {},
         { withCredentials: true },
       );
@@ -95,36 +99,41 @@ const HomePage: React.FC = () => {
           Logout
         </button>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {notes.map((note) => (
           <div
             key={note.ID}
             className="relative p-4 bg-white shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-200 border-t-4 border-blue-600"
           >
+            <div className="flex justify-end">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteNote(note.ID);
+                }}
+                className="top-0 right-2 p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
+
+            {note.dashboard_path && (
+              <img
+                src={`${ApiUrl}/${note.dashboard_path}`}
+                alt={note.title}
+                className="w-full h-32 object-cover mb-2 rounded-md"
+              />
+            )}
+
             <Link to={`/note/${note.ID}`} className="block">
               <h2 className="text-2xl font-semibold text-blue-800 mb-2">
-                {note.title}
+                {note.title ? note.title : "untitled"}
               </h2>
-              {note.dashboard_path && (
-                <img
-                  src={note.dashboard_path}
-                  alt={note.title}
-                  className="w-full h-32 object-cover mb-2 rounded-md"
-                />
-              )}
               <p className="text-gray-700">
                 {truncateContent(note.content, 100)}
               </p>
             </Link>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                handleDeleteNote(note.ID);
-              }}
-              className="absolute top-2 right-2 p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
-            >
-              <Trash2 size={20} />
-            </button>
           </div>
         ))}
       </div>

@@ -1,30 +1,44 @@
 // hooks/useAuth.ts
-import { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const UseAuth = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const ApiUrl = import.meta.env.VITE_USER_AUTH_API;
 
-  useEffect(() => {
-    const token = Cookies.get('token');
-    setIsAuthenticated(!!token);
-  }, []);
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const response = await axios.get(`${ApiUrl}/check-auth`, {
+                    withCredentials: true,
+                });
+                setIsAuthenticated(response.data.authenticated);
+            } catch (error) {
+                setIsAuthenticated(false);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-  return { isAuthenticated };
+        checkAuth();
+    }, []);
+
+    return { isAuthenticated, isLoading };
 };
+
 // components/ProtectedRoute.tsx
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
 
 const ProtectedRoute: React.FC = () => {
-  const { isAuthenticated } = UseAuth();
+    const { isAuthenticated } = UseAuth();
 
-  if (isAuthenticated === null) {
-    return null; // or a loading spinner
-  }
+    if (isAuthenticated === null) {
+        return null; // or a loading spinner
+    }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
+    return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
 };
 
-export {ProtectedRoute, UseAuth};
-
+export { ProtectedRoute, UseAuth };
