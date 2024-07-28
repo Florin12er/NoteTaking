@@ -32,9 +32,9 @@ const Login: React.FC = () => {
       );
 
       if (response.status === 200) {
+        localStorage.setItem("user", response.data.message);
         navigate("/note");
       }
-      localStorage.setItem("user", response.data.message);
       console.log(response.data);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
@@ -46,6 +46,7 @@ const Login: React.FC = () => {
       setIsLoading(false);
     }
   };
+
   function ConnectToGithub() {
     window.location.href = `${ApiUrl}/auth/github`;
   }
