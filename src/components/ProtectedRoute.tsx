@@ -1,21 +1,46 @@
+// api/axiosConfig.ts
+import axios from 'axios';
+
+const ApiUrl = import.meta.env.VITE_USER_AUTH_API;
+
+const axiosInstance = axios.create({
+    baseURL: ApiUrl,
+    withCredentials: true,
+});
+
+
 // hooks/useAuth.ts
 import { useState, useEffect } from "react";
-import axios from "axios";
+
+interface AuthState {
+    isAuthenticated: boolean | null;
+    userId: number | null;
+    error: string | null;
+}
 
 const UseAuth = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+    const [authState, setAuthState] = useState<AuthState>({
+        isAuthenticated: null,
+        userId: null,
+        error: null,
+    });
     const [isLoading, setIsLoading] = useState(true);
-    const ApiUrl = import.meta.env.VITE_USER_AUTH_API;
 
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const response = await axios.get(`${ApiUrl}/check-auth`, {
-                    withCredentials: true,
+                const response = await axiosInstance.get('/check-auth');
+                setAuthState({
+                    isAuthenticated: response.data.authenticated,
+                    userId: response.data.user_id,
+                    error: null,
                 });
-                setIsAuthenticated(response.data.authenticated);
             } catch (error) {
-                setIsAuthenticated(false);
+                setAuthState({
+                    isAuthenticated: false,
+                    userId: null,
+                    error: "Authentication failed",
+                });
             } finally {
                 setIsLoading(false);
             }
@@ -24,21 +49,21 @@ const UseAuth = () => {
         checkAuth();
     }, []);
 
-    return { isAuthenticated, isLoading };
+    return { ...authState, isLoading };
 };
 
-// components/ProtectedRoute.tsx
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
 const ProtectedRoute: React.FC = () => {
-    const { isAuthenticated } = UseAuth();
+    const { isAuthenticated, isLoading } = UseAuth();
 
-    if (isAuthenticated === null) {
-        return null; // or a loading spinner
+    if (isLoading) {
+        return <div>Loading...</div>; // or a loading spinner component
     }
 
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
 };
 
 export { ProtectedRoute, UseAuth };
+
