@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = 'https://noteapi-rw35.onrender.com';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
