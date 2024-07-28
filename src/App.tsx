@@ -10,7 +10,7 @@ import Reset from "./routes/ResetPassword";
 import HomePage from "./routes/NotePage";
 import NoteEditor from "./routes/Note";
 import UpdateNote from "./routes/Update";
-import { ProtectedRoute, UseAuth } from "./components/ProtectedRoute";
+import { /* ProtectedRoute, */ UseAuth } from "./components/ProtectedRoute";
 
 const App: React.FC = () => {
   const { isAuthenticated } = UseAuth();
