@@ -14,7 +14,7 @@ interface Note {
   Content: string;
 }
 const ApiUrl = import.meta.env.VITE_NOTE_API;
-const WS_URL = `ws://${ApiUrl}/ws`;
+const WS_URL = `wss://${ApiUrl}/ws`;
 
 const SideBar: React.FC = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
