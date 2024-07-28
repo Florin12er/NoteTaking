@@ -16,10 +16,6 @@ const HomePage: React.FC = () => {
   const ApiUrl = import.meta.env.VITE_NOTE_API;
   const UserApi = import.meta.env.VITE_USER_AUTH_API;
 
-  useEffect(() => {
-    fetchNotes();
-  }, []);
-
   const fetchNotes = async () => {
     try {
       const response = await axios.get(`${ApiUrl}/notes`, {
@@ -33,6 +29,10 @@ const HomePage: React.FC = () => {
       }
     }
   };
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
 
   const truncateContent = (content: string, length: number) => {
     const parser = new DOMParser();

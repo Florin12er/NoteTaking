@@ -39,7 +39,7 @@ const SideBar: React.FC = () => {
 
   const fetchNotes = async () => {
     try {
-      const response = await axios.get<Note[]>(`${ApiUrl}/notes`, {
+      const response = await axios.get(`${ApiUrl}/notes`, {
         withCredentials: true,
       });
       setNotes(response.data);
