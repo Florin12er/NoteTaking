@@ -10,7 +10,7 @@ import Reset from "./routes/ResetPassword";
 import HomePage from "./routes/NotePage";
 import NoteEditor from "./routes/Note";
 import UpdateNote from "./routes/Update";
-import { /* ProtectedRoute, */ UseAuth } from "./components/ProtectedRoute";
+import { ProtectedRoute, UseAuth } from "./components/ProtectedRoute";
 
 const App: React.FC = () => {
   const { isAuthenticated } = UseAuth();
@@ -21,10 +21,12 @@ const App: React.FC = () => {
         path="/"
         element={isAuthenticated ? <Navigate to="/note" /> : <Home />}
       />
-      <Route path="/note" element={<DashBoard />}>
-        <Route index element={<HomePage />} />
-        <Route path="new" element={<NoteEditor />} />
-        <Route path=":noteId" element={<UpdateNote />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/note" element={<DashBoard />}>
+          <Route index element={<HomePage />} />
+          <Route path="new" element={<NoteEditor />} />
+          <Route path=":noteId" element={<UpdateNote />} />
+        </Route>
       </Route>
       <Route
         path="/login"
