@@ -1,7 +1,7 @@
 // hooks/useAuth.ts
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+// hooks/useAuth.ts
 const UseAuth = () => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +26,7 @@ const UseAuth = () => {
 
     return { isAuthenticated, isLoading };
 };
+
 
 // components/ProtectedRoute.tsx
 import React from "react";
