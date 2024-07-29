@@ -21,12 +21,10 @@ const App: React.FC = () => {
         path="/"
         element={isAuthenticated ? <Navigate to="/note" /> : <Home />}
       />
-      <Route element={<ProtectedRoute />}>
-        <Route path="/note" element={<DashBoard />}>
-          <Route index element={<HomePage />} />
-          <Route path="new" element={<NoteEditor />} />
-          <Route path=":noteId" element={<UpdateNote />} />
-        </Route>
+      <Route path="/note" element={<DashBoard />}>
+        <Route index element={<HomePage />} />
+        <Route path="new" element={<NoteEditor />} />
+        <Route path=":noteId" element={<UpdateNote />} />
       </Route>
       <Route
         path="/login"
