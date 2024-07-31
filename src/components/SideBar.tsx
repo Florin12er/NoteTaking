@@ -15,7 +15,6 @@ interface Note {
   Content: string;
 }
 const ApiUrl = import.meta.env.VITE_NOTE_API;
-const WS_URL = `wss://noteapi-rw35.onrender.com/ws`;
 
 const SideBar: React.FC = () => {
   const navigate = useNavigate();
@@ -28,7 +27,10 @@ const SideBar: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [areNotesCollapsed, setAreNotesCollapsed] = useState(false);
 
-  const { lastMessage } = useWebSocket(WS_URL);
+  const token = localStorage.getItem("token");
+  const { lastMessage } = useWebSocket(
+    `wss://noteapi-rw35.onrender.com/ws?token=${token}`,
+  );
   const fetchNotes = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
