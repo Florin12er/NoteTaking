@@ -1,4 +1,5 @@
 import React from "react";
+import OAuthCallback from "./components/OuathCallback";
 import "highlight.js/styles/base16/dracula.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import DashBoard from "./routes/DashBoard";
@@ -10,7 +11,7 @@ import Reset from "./routes/ResetPassword";
 import HomePage from "./routes/NotePage";
 import NoteEditor from "./routes/Note";
 import UpdateNote from "./routes/Update";
-import { /* ProtectedRoute,  */ UseAuth } from "./components/ProtectedRoute";
+import { ProtectedRoute, UseAuth } from "./components/ProtectedRoute";
 
 const App: React.FC = () => {
   const { isAuthenticated } = UseAuth();
@@ -21,10 +22,12 @@ const App: React.FC = () => {
         path="/"
         element={isAuthenticated ? <Navigate to="/note" /> : <Home />}
       />
-      <Route path="/note" element={<DashBoard />}>
-        <Route index element={<HomePage />} />
-        <Route path="new" element={<NoteEditor />} />
-        <Route path=":noteId" element={<UpdateNote />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/note" element={<DashBoard />}>
+          <Route index element={<HomePage />} />
+          <Route path="new" element={<NoteEditor />} />
+          <Route path=":noteId" element={<UpdateNote />} />
+        </Route>
       </Route>
       <Route
         path="/login"
@@ -42,6 +45,7 @@ const App: React.FC = () => {
         path="/reset-password"
         element={isAuthenticated ? <Navigate to="/note" /> : <Reset />}
       />
+      <Route path="/oauth/callback" element={<OAuthCallback />} />
     </Routes>
   );
 };

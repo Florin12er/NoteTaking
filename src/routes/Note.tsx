@@ -63,12 +63,19 @@ const NoteEditor: React.FC = () => {
       formData.append("dashboard_image", dashboardImage);
     }
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You are not authenticated. Please log in.");
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await axios.post(`${ApiUrl}/notes`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
-        withCredentials: true,
       });
 
       console.log("Note saved:", response.data);
@@ -76,11 +83,19 @@ const NoteEditor: React.FC = () => {
       navigate(`/note/${response.data.ID}`);
     } catch (error) {
       console.error("Error saving note:", error);
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        navigate("/login");
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert("Your session has expired. Please log in again.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+        } else {
+          alert(
+            `Failed to save note: ${error.response?.data?.error || "Unknown error"}`,
+          );
+        }
       } else {
-        alert("Failed to save note.");
+        alert("An unexpected error occurred while saving the note.");
       }
     }
   };

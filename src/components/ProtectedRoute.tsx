@@ -20,9 +20,19 @@ const UseAuth = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const response = await axios.get(`${ApiUrl}/check-auth`, {
-          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
         setIsAuthenticated(response.data.authenticated);
         setError(null);
@@ -39,7 +49,17 @@ const UseAuth = () => {
 
   const logout = async () => {
     try {
-      await axios.post(`${ApiUrl}/logout`, {}, { withCredentials: true });
+      await axios.post(
+        `${ApiUrl}/logout`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       setIsAuthenticated(false);
     } catch (error) {
       console.error("Logout failed:", error);

@@ -17,13 +17,26 @@ const HomePage: React.FC = () => {
   const UserApi = import.meta.env.VITE_USER_AUTH_API;
 
   const fetchNotes = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await axios.get(`${ApiUrl}/notes`, {
-        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       setNotes(response.data);
     } catch (error) {
       console.error("Error fetching notes:", error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+      }
     }
   };
 
@@ -42,44 +55,56 @@ const HomePage: React.FC = () => {
   };
 
   const handleDeleteNote = async (id: number) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       await axios.delete(`${ApiUrl}/notes/${id}`, {
-        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       setNotes(notes.filter((note) => note.ID !== id));
       alert("Note deleted successfully!");
     } catch (error) {
       console.error("Error deleting note:", error);
-      alert("Failed to delete note.");
       if (axios.isAxiosError(error) && error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
         navigate("/login");
+      } else {
+        alert("Failed to delete note.");
       }
     }
   };
 
   const handleLogout = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
-      // Wait for the logout request to complete
-      const response = await axios.post(
+      await axios.post(
         `${UserApi}/logout`,
         {},
-        { withCredentials: true },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
-      window.location.href = "/login";
-      if (response.status === 200) {
-        // Clear any client-side storage
-        localStorage.removeItem("user"); // If you're using localStorage
 
-        // Optionally, clear cookies on the client-side
-        document.cookie =
-          "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie =
-          "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      // Clear local storage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
 
-        // Redirect to the login page
-      } else {
-        console.error("Logout failed:", response.data);
-      }
+      // Redirect to the login page
+      navigate("/login");
     } catch (error) {
       console.error("Error logging out:", error);
     }

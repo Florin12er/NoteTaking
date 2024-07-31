@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { ChevronsLeft, Menu, FileText, NotepadText } from "lucide-react";
 import { useMediaQuery } from "usehooks-ts";
@@ -17,6 +18,7 @@ const ApiUrl = import.meta.env.VITE_NOTE_API;
 const WS_URL = `wss://noteapi-rw35.onrender.com/ws`;
 
 const SideBar: React.FC = () => {
+  const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const isResizing = useRef(false);
   const sideBarRef = useRef<HTMLElement>(null);
@@ -27,6 +29,29 @@ const SideBar: React.FC = () => {
   const [areNotesCollapsed, setAreNotesCollapsed] = useState(false);
 
   const { lastMessage } = useWebSocket(WS_URL);
+  const fetchNotes = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${ApiUrl}/notes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setNotes(response.data);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+      }
+    }
+  };
 
   useEffect(() => {
     if (isMobile) {
@@ -36,17 +61,6 @@ const SideBar: React.FC = () => {
     }
     fetchNotes();
   }, [isMobile]);
-
-  const fetchNotes = async () => {
-    try {
-      const response = await axios.get(`${ApiUrl}/notes`, {
-        withCredentials: true,
-      });
-      setNotes(response.data);
-    } catch (error) {
-      console.error("Error fetching notes:", error);
-    }
-  };
 
   useEffect(() => {
     if (lastMessage !== null) {
@@ -73,7 +87,6 @@ const SideBar: React.FC = () => {
       }
     }
   }, [lastMessage]);
-
   const handleMouseDown = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
@@ -172,7 +185,7 @@ const SideBar: React.FC = () => {
               onClick={toggleNotesCollapse}
             >
               <FileText />
-             Notes 
+              Notes
             </p>
           </motion.div>
           {!areNotesCollapsed && (
@@ -240,4 +253,3 @@ const SideBar: React.FC = () => {
 };
 
 export default SideBar;
-

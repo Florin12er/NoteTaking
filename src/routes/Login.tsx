@@ -25,12 +25,13 @@ const Login: React.FC = () => {
         password: password,
       });
 
-      if (response.status === 200) {
+      if (response.status === 200 && response.data.token) {
+        localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", response.data.message);
-        // Optionally, you can set up an authentication context here
         navigate("/note");
+      } else {
+        setError("Invalid response from server");
       }
-      console.log(response.data);
     } catch (err) {
       if (axios.isAxiosError(err)) {
         if (err.response) {
@@ -48,12 +49,14 @@ const Login: React.FC = () => {
     }
   };
 
-  function ConnectToGithub() {
-    window.location.href = `${ApiUrl}/auth/github`;
-  }
-  function ConnectToGoogle() {
-    window.location.href = `${ApiUrl}/auth/google`;
-  }
+  const handleOAuthLogin = (provider: string) => {
+    // Store the current URL to redirect back after OAuth
+    localStorage.setItem("redirectUrl", window.location.href);
+    window.location.href = `${ApiUrl}/auth/${provider}`;
+  };
+
+  const ConnectToGithub = () => handleOAuthLogin("github");
+  const ConnectToGoogle = () => handleOAuthLogin("google");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

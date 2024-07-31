@@ -7,27 +7,28 @@ import EditorConfig from "../components/EditorConfig";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Undo, Redo, Copy, Save, Upload } from "lucide-react";
 import axios from "axios";
+
 interface Note {
-  dashboard_path: string;
+  id: string;
   title: string;
+  content: string;
+  dashboard_path: string;
 }
+
 const UpdateNote: React.FC = () => {
-  const [note, setNotes] = useState<Note[]>([]);
-  note.values;
+  const [title, setTitle] = useState<string>("");
+  const [dashboardImage, setDashboardImage] = useState<string | File>("");
+  const [showBlockMenu, setShowBlockMenu] = useState<boolean>(false);
   const ApiUrl = import.meta.env.VITE_NOTE_API;
 
   const navigate = useNavigate();
   const { noteId } = useParams<{ noteId: string }>();
-  const [showBlockMenu, setShowBlockMenu] = useState<boolean>(false);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>("");
-  const [dashboardImage, setDashboardImage] = useState<string | File>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     ...EditorConfig,
     onUpdate: () => {
-      !isMobile;
+      // Do something when the editor updates
     },
   });
 
@@ -41,51 +42,36 @@ const UpdateNote: React.FC = () => {
       reader.readAsDataURL(file);
     }
   };
-  const fetchNotes = async () => {
+
+  const fetchNote = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
-      const response = await axios.get(
-        `${ApiUrl}/notes/${noteId}`,
-        {
-          withCredentials: true,
+      const response = await axios.get(`${ApiUrl}/notes/${noteId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
-      setNotes(response.data);
+      });
+      const fetchedNote = response.data as Note;
+      setTitle(fetchedNote.title);
+      setDashboardImage(fetchedNote.dashboard_path);
+      editor?.commands.setContent(fetchedNote.content);
     } catch (error) {
-      console.error("Error fetching notes:", error);
+      console.error("Error fetching note:", error);
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         navigate("/login");
+      } else {
+        alert("Failed to load note.");
       }
     }
   };
 
   useEffect(() => {
-    fetchNotes();
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  });
-
-  useEffect(() => {
-    const fetchNote = async () => {
-      try {
-        const response = await axios.get(
-          `${ApiUrl}/notes/${noteId}`,
-          { withCredentials: true },
-        );
-        const { title, content, dashboard_path } = response.data;
-        setTitle(title);
-        setDashboardImage(dashboard_path);
-        editor?.commands.setContent(content);
-      } catch (error) {
-        console.error("Error fetching note:", error);
-        alert("Failed to load note.");
-      }
-    };
-
-    if (noteId) {
-      fetchNote();
-    }
+    fetchNote();
   }, [noteId, editor]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,30 +85,40 @@ const UpdateNote: React.FC = () => {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("content", content);
-    if (dashboardImage) {
+    if (dashboardImage instanceof File) {
       formData.append("dashboard_image", dashboardImage);
     }
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You are not authenticated. Please log in.");
+      navigate("/login");
+      return;
+    }
+
     try {
-      const response = await axios.put(
-        `${ApiUrl}/notes/${noteId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
+      const response = await axios.put(`${ApiUrl}/notes/${noteId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       console.log("Note updated:", response.data);
       alert("Note updated successfully!");
-      setNotes(response.data);
     } catch (error) {
       console.error("Error updating note:", error);
-      alert("Failed to update note.");
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        alert("Your session has expired. Please log in again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+      } else {
+        alert("Failed to update note.");
+      }
     }
   };
+
   const copyPlainText = () => {
     if (editor) {
       const plainText = editor.getText();
@@ -159,10 +155,7 @@ const UpdateNote: React.FC = () => {
         </AnimatePresence>
       </div>
       <div className="flex justify-center bg-gray-50 p-4">
-        <img
-          className="w-full h-[500px]"
-          src={`${ApiUrl}/${dashboardImage}`}
-        />
+        <img className="w-full h-[500px]" src={`${ApiUrl}/${dashboardImage}`} />
       </div>
       <div className="p-4 bg-gray-50 border-b border-gray-200">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -267,8 +260,8 @@ const UpdateNote: React.FC = () => {
           </motion.button>
         </div>
       </div>
-      <div></div>
     </div>
   );
 };
+
 export default UpdateNote;
