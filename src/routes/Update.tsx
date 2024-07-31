@@ -16,11 +16,11 @@ interface Note {
 }
 
 const UpdateNote: React.FC = () => {
-  const [title, setTitle] = useState<string>("");
+  const [title, setTitle] = useState("");
   const [dashboardImage, setDashboardImage] = useState<string | File>("");
-  const [showBlockMenu, setShowBlockMenu] = useState<boolean>(false);
+  const [showBlockMenu, setShowBlockMenu] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const ApiUrl = import.meta.env.VITE_NOTE_API;
-
   const navigate = useNavigate();
   const { noteId } = useParams<{ noteId: string }>();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,6 +44,7 @@ const UpdateNote: React.FC = () => {
   };
 
   const fetchNote = async () => {
+    setIsLoading(true);
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
@@ -67,6 +68,8 @@ const UpdateNote: React.FC = () => {
       } else {
         alert("Failed to load note.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -80,12 +83,13 @@ const UpdateNote: React.FC = () => {
 
   const handleSave = async () => {
     if (!editor) return;
+    setIsLoading(true);
 
     const content = editor.getHTML();
     const formData = new FormData();
     formData.append("title", title);
     formData.append("content", content);
-    if (dashboardImage) {
+    if (dashboardImage instanceof File) {
       formData.append("dashboard_image", dashboardImage);
     }
 
@@ -103,19 +107,26 @@ const UpdateNote: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
       console.log("Note updated:", response.data);
       alert("Note updated successfully!");
     } catch (error) {
       console.error("Error updating note:", error);
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert("Your session has expired. Please log in again.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+        } else {
+          alert(
+            `Failed to update note: ${error.response?.data?.error || error.message}`,
+          );
+        }
       } else {
-        alert("Failed to update note.");
+        alert("An unexpected error occurred while updating the note.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -133,6 +144,7 @@ const UpdateNote: React.FC = () => {
         });
     }
   };
+
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
       <div className="relative">
@@ -155,7 +167,21 @@ const UpdateNote: React.FC = () => {
         </AnimatePresence>
       </div>
       <div className="flex justify-center bg-gray-50 p-4">
-        <img className="w-full h-[500px]" src={`${ApiUrl}/${dashboardImage}`} />
+        {dashboardImage && (
+          <img
+            className="w-full h-[500px] object-cover"
+            src={
+              typeof dashboardImage === "string"
+                ? `${ApiUrl}/${dashboardImage}`
+                : URL.createObjectURL(dashboardImage)
+            }
+            alt={title}
+            onError={(e) => {
+              e.currentTarget.src = "path/to/placeholder-image.jpg";
+              console.error("Failed to load image:", dashboardImage);
+            }}
+          />
+        )}
       </div>
       <div className="p-4 bg-gray-50 border-b border-gray-200">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -260,6 +286,11 @@ const UpdateNote: React.FC = () => {
           </motion.button>
         </div>
       </div>
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
     </div>
   );
 };
