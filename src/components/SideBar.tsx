@@ -14,7 +14,9 @@ interface Note {
   title: string;
   Content: string;
 }
+
 const ApiUrl = import.meta.env.VITE_NOTE_API;
+const WS_URL = import.meta.env.VITE_WS_URL;
 
 const SideBar: React.FC = () => {
   const navigate = useNavigate();
@@ -28,11 +30,18 @@ const SideBar: React.FC = () => {
   const [areNotesCollapsed, setAreNotesCollapsed] = useState(false);
 
   const token = localStorage.getItem("token");
-  const { lastMessage } = useWebSocket(
-    `wss://noteapi-rw35.onrender.com/ws?token=${token}`,
+  const { lastMessage, readyState } = useWebSocket(
+    token ? `${WS_URL}?token=${token}` : null,
+    {
+      shouldReconnect: () => true,
+      reconnectInterval: 3000,
+      onOpen: () => console.log("WebSocket connected"),
+      onClose: () => console.log("WebSocket disconnected"),
+      onError: (event) => console.error("WebSocket error:", event),
+    },
   );
+
   const fetchNotes = async () => {
-    const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
@@ -66,29 +75,52 @@ const SideBar: React.FC = () => {
 
   useEffect(() => {
     if (lastMessage !== null) {
-      const message = JSON.parse(lastMessage.data);
-
-      switch (message.type) {
-        case "noteList":
-          setNotes(message.data);
-          break;
-        case "noteUpdate":
-          setNotes((prevNotes) =>
-            prevNotes.map((note) =>
-              note.ID === message.data.ID ? message.data : note,
-            ),
-          );
-          break;
-        case "noteDelete":
-          setNotes((prevNotes) =>
-            prevNotes.filter((note) => note.ID !== message.data),
-          );
-          break;
-        default:
-          break;
+      try {
+        const message = JSON.parse(lastMessage.data);
+        switch (message.type) {
+          case "noteList":
+            setNotes(message.data);
+            break;
+          case "noteUpdate":
+            setNotes((prevNotes) =>
+              prevNotes.map((note) =>
+                note.ID === message.data.ID ? message.data : note,
+              ),
+            );
+            break;
+          case "noteDelete":
+            setNotes((prevNotes) =>
+              prevNotes.filter((note) => note.ID !== message.data),
+            );
+            break;
+          default:
+            console.log("Unhandled message type:", message.type);
+        }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
       }
     }
   }, [lastMessage]);
+
+  useEffect(() => {
+    switch (readyState) {
+      case WebSocket.CONNECTING:
+        console.log("WebSocket connecting...");
+        break;
+      case WebSocket.OPEN:
+        console.log("WebSocket connection established");
+        break;
+      case WebSocket.CLOSING:
+        console.log("WebSocket connection is closing");
+        break;
+      case WebSocket.CLOSED:
+        console.log("WebSocket connection closed");
+        break;
+      default:
+        break;
+    }
+  }, [readyState]);
+
   const handleMouseDown = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
