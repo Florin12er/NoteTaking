@@ -67,16 +67,24 @@ const HomePage: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+      // Remove the deleted note from the state
       setNotes(notes.filter((note) => note.ID !== id));
       alert("Note deleted successfully!");
     } catch (error) {
       console.error("Error deleting note:", error);
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert("Your session has expired. Please log in again.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+        } else {
+          alert(
+            `Failed to delete note: ${error.response?.data?.error || error.message}`,
+          );
+        }
       } else {
-        alert("Failed to delete note.");
+        alert("An unexpected error occurred while deleting the note.");
       }
     }
   };
