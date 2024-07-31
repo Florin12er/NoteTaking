@@ -20,25 +20,26 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        `${ApiUrl}/login`,
-        {
-          email_or_username: email,
-          password: password,
-        },
-        {
-          withCredentials: true,
-        },
-      );
+      const response = await axios.post(`${ApiUrl}/login`, {
+        email_or_username: email,
+        password: password,
+      });
 
       if (response.status === 200) {
         localStorage.setItem("user", response.data.message);
+        // Optionally, you can set up an authentication context here
         navigate("/note");
       }
       console.log(response.data);
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.error || "An error occurred during login");
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          setError(err.response.data.error || "An error occurred during login");
+        } else if (err.request) {
+          setError("No response received from the server. Please try again.");
+        } else {
+          setError("Error setting up the request. Please try again.");
+        }
       } else {
         setError("An unexpected error occurred");
       }
