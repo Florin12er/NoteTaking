@@ -13,7 +13,7 @@ const Reset: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
-      const ApiUrl = import.meta.env.VITE_USER_AUTH_API;
+  const ApiUrl = import.meta.env.VITE_USER_AUTH_API;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,15 +28,11 @@ const Reset: React.FC = () => {
     }
 
     try {
-      const response = await axios.post(
-        `${ApiUrl}/reset-password`,
-        {
-          email: email,
-          reset_code: resetCode,
-          new_password: newPassword,
-        },
-        { withCredentials: true },
-      );
+      const response = await axios.post(`${ApiUrl}/reset-password`, {
+        email: email,
+        reset_code: resetCode,
+        new_password: newPassword,
+      });
 
       if (response.status === 200) {
         setSuccess("Password reset successful. Redirecting to login...");

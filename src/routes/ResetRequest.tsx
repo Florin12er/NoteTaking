@@ -18,11 +18,7 @@ const ResetRequest: React.FC = () => {
     setSuccess(null);
 
     try {
-      const response = await axios.post(
-        `${ApiUrl}/reset-request`,
-        { email },
-        { withCredentials: true },
-      );
+      const response = await axios.post(`${ApiUrl}/reset-request`, { email });
 
       if (response.status === 200) {
         setSuccess(`Password reset email sent successfully to ${email}`);
