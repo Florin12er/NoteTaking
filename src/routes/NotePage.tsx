@@ -25,6 +25,7 @@ const HomePage: React.FC = () => {
     } catch (error) {
       console.error("Error fetching notes:", error);
       if (axios.isAxiosError(error) && error.response?.status === 401) {
+        alert("Your session has expired. Please log in again.");
         navigate("/login");
       }
     }

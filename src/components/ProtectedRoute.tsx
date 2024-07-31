@@ -27,13 +27,13 @@ const UseAuth = () => {
         setIsAuthenticated(response.data.authenticated);
         setError(null);
       } catch (error) {
+        console.error("Auth check error:", error);
         setIsAuthenticated(false);
         setError("Failed to check authentication status");
       } finally {
         setIsLoading(false);
       }
     };
-
     checkAuth();
   }, [ApiUrl]);
 
