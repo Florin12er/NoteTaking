@@ -85,7 +85,7 @@ const UpdateNote: React.FC = () => {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("content", content);
-    if (dashboardImage instanceof File) {
+    if (dashboardImage) {
       formData.append("dashboard_image", dashboardImage);
     }
 
